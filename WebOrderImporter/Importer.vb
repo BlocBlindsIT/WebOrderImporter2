@@ -19,7 +19,7 @@ Module Importer
         UK
         IE
         TEST
-        BFSUK
+        BPPE_UK
     End Enum
 
 
@@ -728,7 +728,9 @@ Module Importer
         ' -- FittingType - Must be calculated at the start as other parameters depend on it -
         If drOrderLine.Table.Columns.Contains("FittingType") Then
             If IsDBNull(drOrderLine("FittingType")) = False Then
-                strFittingType_value = lst_ProdSys_FittingTypes(drOrderLine("FittingType").ToString.ToLower)
+                If lst_ProdSys_FittingTypes.ContainsKey(drOrderLine("FittingType").ToString().ToLower()) Then
+                    strFittingType_value = lst_ProdSys_FittingTypes(drOrderLine("FittingType").ToString.ToLower)
+                End If
             End If
         End If
 
@@ -1459,7 +1461,9 @@ Module Importer
         ' -- FittingType --
         If drOrderLine.Table.Columns.Contains("FittingType") Then
             If IsDBNull(drOrderLine("FittingType")) = False Then
-                strFittingType_value = lst_ProdSys_FittingTypes(drOrderLine("FittingType").ToString.ToLower)
+                If lst_ProdSys_FittingTypes.ContainsKey(drOrderLine("FittingType").ToString().ToLower()) Then
+                    strFittingType_value = lst_ProdSys_FittingTypes(drOrderLine("FittingType").ToString.ToLower)
+                End If
             End If
         End If
 
@@ -1859,7 +1863,9 @@ Module Importer
         ' -- FittingType --
         If drOrderLine.Table.Columns.Contains("FittingType") Then
             If IsDBNull(drOrderLine("FittingType")) = False Then
-                strFittingType_value = lst_ProdSys_FittingTypes(drOrderLine("FittingType").ToString.ToLower)
+                If lst_ProdSys_FittingTypes.ContainsKey(drOrderLine("FittingType").ToString().ToLower()) Then
+                    strFittingType_value = lst_ProdSys_FittingTypes(drOrderLine("FittingType").ToString.ToLower)
+                End If
             End If
         End If
 
@@ -2441,7 +2447,15 @@ Module Importer
 
         ' --- Establishing item code format based on product name ---
         Select Case strAppName.ToLower
-            Case "additionalfabric", "blocout40", "blocout80", "customskylight", "pelmet", "premiumrollerblind",
+            Case "additionalfabric"
+                Dim strPrefix = ""
+                If drOrderLine.Table.Columns.Contains("FittingType") Then
+                    strPrefix = drOrderLine("FittingType")
+                End If
+                If strPrefix = "" Then strPrefix = lst_ProdSys_ItemCodePrefix("additionalfabric")      ' default, as set in the Initialise_ClassVariables function
+                strResult = strPrefix & "-<widthxheight>|<aluminiumcode>|<fabriccode>"
+
+            Case "blocout40", "blocout80", "customskylight", "pelmet", "premiumrollerblind",
                  "rollerblind", "rollerblinddrillfree", "rollerblindmotorised", "twinrollerblind", "virtualfabric", "zebrarollerblind"
                 strResult = "<prefix><motor>-<widthxheight>|<aluminiumcode>|<fabriccode>"
 
@@ -2709,7 +2723,11 @@ Module Importer
                 For Each column As DataColumn In drOrderLine.Table.Columns
                     If lstColumnWhitelist.Contains(column.ColumnName.ToLower) Then
 
-                        strResult = strResult & column.ColumnName & ": " & drOrderLine(column).ToString & " "
+                        If strAppName.ToLower() = "additionalfabric" And column.ColumnName.ToLower() = "fittingtype" Then
+                            ' Do nothing. Fitting type is being borrowed here to track the type of blind that the additional fabric is for
+                        Else
+                            strResult = strResult & column.ColumnName & ": " & drOrderLine(column).ToString & " "
+                        End If
 
                     Else
                         ' Do nothing. The column is not in the whitelist and should not go in to the description
@@ -2853,6 +2871,7 @@ Module Importer
     ''' <remarks>Author: Huw Day - 05/02/2018</remarks>
     Function ImportFabricSamples(strWebsite As String) As String
 
+
         ' --- Defining objects and variables ---
         Dim dtFabricSampleHeaders As DataTable
         Dim dtFabricSampleLines As DataTable
@@ -2862,154 +2881,160 @@ Module Importer
         Dim dateCouponExpiry As Date
         Dim strOutput As String = ""
 
-        ' --- Defining query objects ---
-        Dim query As String = "INSERT INTO FabricSampleOrders([FabricSampleOrderDate], [OrderOrigination], OriginatingOrderNumber, " _
-            & "CustomerName, Add1, Add2, Add3, Add4, Add5, Email, Phone, CouponCode, CouponExpiry, CouponPercent, " _
-            & "SampleCode1, SampleCode2, SampleCode3, SampleCode4, SampleCode5, SampleCode6, SampleCode7, SampleCode8, SampleCode9, SampleCode10, " _
-            & "SampleDescription1, SampleDescription2, SampleDescription3, SampleDescription4, SampleDescription5, " _
-            & "SampleDescription6, SampleDescription7, SampleDescription8, SampleDescription9, SampleDescription10) " _
-            & "VALUES (@FabricSampleOrderDate, @OrderOrigination, @OriginatingOrderNumber, @CustomerName, @Add1, @Add2, @Add3, @Add4, @Add5, @Email, " _
-            & "@Phone, @CouponCode, @CouponExpiry, @CouponPercent, " _
-            & "@SampleCode1, @SampleCode2, @SampleCode3, @SampleCode4, @SampleCode5, @SampleCode6, @SampleCode7, @SampleCode8, @SampleCode9, @SampleCode10, " _
-            & "@SampleDescription1, @SampleDescription2, @SampleDescription3, @SampleDescription4, @SampleDescription5, " _
-            & "@SampleDescription6, @SampleDescription7, @SampleDescription8, @SampleDescription9, @SampleDescription10 " _
-            & ");"
-        Dim cmd As SqlCommand
 
-        ' --- Defining sql parameters ---
-        Dim paramOrderDate As SqlParameter
-        Dim paramOrderOriginSite As SqlParameter
-        Dim paramOrderOriginNumber As SqlParameter
-        Dim paramCustomerName As SqlParameter
-        Dim paramAddress1 As SqlParameter
-        Dim paramAddress2 As SqlParameter
-        Dim paramAddress3 As SqlParameter
-        Dim paramAddress4 As SqlParameter
-        Dim paramAddress5 As SqlParameter
-        Dim paramEmail As SqlParameter
-        Dim paramPhone As SqlParameter
-        Dim paramCouponCode As SqlParameter
-        Dim paramCouponExpiry As SqlParameter
-        Dim paramCouponPercent As SqlParameter
-
-        Dim lstParamsSampleCodes As List(Of SqlParameter)
-        Dim lstParamsSampleNames As List(Of SqlParameter)
-
-
-        ' --- pre-calculating ProdSys site name ---
-        If strWebsite = "UK" Then
-            strSiteName = "BLOCUKWebsite"
-        ElseIf strWebsite = "IE" Then
-            strSiteName = "BlocBlindsIE"
+        If strWebsite = enumWebsites.BPPE_UK.ToString() Then
+            ' skip
         Else
-            strSiteName = "BlocBlinds" & strWebsite
-        End If
+
+            ' --- Defining query objects ---
+            Dim query As String = "INSERT INTO FabricSampleOrders([FabricSampleOrderDate], [OrderOrigination], OriginatingOrderNumber, " _
+                & "CustomerName, Add1, Add2, Add3, Add4, Add5, Email, Phone, CouponCode, CouponExpiry, CouponPercent, " _
+                & "SampleCode1, SampleCode2, SampleCode3, SampleCode4, SampleCode5, SampleCode6, SampleCode7, SampleCode8, SampleCode9, SampleCode10, " _
+                & "SampleDescription1, SampleDescription2, SampleDescription3, SampleDescription4, SampleDescription5, " _
+                & "SampleDescription6, SampleDescription7, SampleDescription8, SampleDescription9, SampleDescription10) " _
+                & "VALUES (@FabricSampleOrderDate, @OrderOrigination, @OriginatingOrderNumber, @CustomerName, @Add1, @Add2, @Add3, @Add4, @Add5, @Email, " _
+                & "@Phone, @CouponCode, @CouponExpiry, @CouponPercent, " _
+                & "@SampleCode1, @SampleCode2, @SampleCode3, @SampleCode4, @SampleCode5, @SampleCode6, @SampleCode7, @SampleCode8, @SampleCode9, @SampleCode10, " _
+                & "@SampleDescription1, @SampleDescription2, @SampleDescription3, @SampleDescription4, @SampleDescription5, " _
+                & "@SampleDescription6, @SampleDescription7, @SampleDescription8, @SampleDescription9, @SampleDescription10 " _
+                & ");"
+            Dim cmd As SqlCommand
+
+            ' --- Defining sql parameters ---
+            Dim paramOrderDate As SqlParameter
+            Dim paramOrderOriginSite As SqlParameter
+            Dim paramOrderOriginNumber As SqlParameter
+            Dim paramCustomerName As SqlParameter
+            Dim paramAddress1 As SqlParameter
+            Dim paramAddress2 As SqlParameter
+            Dim paramAddress3 As SqlParameter
+            Dim paramAddress4 As SqlParameter
+            Dim paramAddress5 As SqlParameter
+            Dim paramEmail As SqlParameter
+            Dim paramPhone As SqlParameter
+            Dim paramCouponCode As SqlParameter
+            Dim paramCouponExpiry As SqlParameter
+            Dim paramCouponPercent As SqlParameter
+
+            Dim lstParamsSampleCodes As List(Of SqlParameter)
+            Dim lstParamsSampleNames As List(Of SqlParameter)
 
 
-        ' --- Looping through each order header that has fabric samples ---
-        Try
-            dtFabricSampleHeaders = Get_FabricSamplesToImport_OrderHeaders(strWebsite)
-            For Each drHeaderRow As DataRow In dtFabricSampleHeaders.Rows
-
-                ' --- pre-calculating fabric sample coupon information ---
-                strCouponCode = Importer.Get_FabricSamples_DiscountCode(CInt(drHeaderRow("Order_No").ToString), strWebsite)
-                intCouponDiscount = Importer.Get_FabricSamples_Discount(strWebsite)
-                dateCouponExpiry = Importer.Get_FabricSamples_DiscountExpiry()
-
-                ' --- Getting all fabric sample order lines for this order ---
-                dtFabricSampleLines = Get_FabricSamplesToImport_OrderLines(strWebsite, CInt(drHeaderRow("Order_No")))
-                If dtFabricSampleLines.Rows.Count > 0 Then
-
-                    ' --- Loop through each set of 10 fabric samples in the order ---
-                    For i = 0 To dtFabricSampleLines.Rows.Count - 1 Step 10
-
-                        ' --- Create command and header-level parameters ---
-                        cmd = New SqlCommand
-                        lstParamsSampleCodes = New List(Of SqlParameter)
-                        lstParamsSampleNames = New List(Of SqlParameter)
-                        cmd.CommandText = query
-                        paramOrderDate = New SqlParameter("@FabricSampleOrderDate", drHeaderRow("DateEntered"))
-                        paramOrderOriginSite = New SqlParameter("@OrderOrigination", strSiteName)
-                        paramOrderOriginNumber = New SqlParameter("@OriginatingOrderNumber", drHeaderRow("Order_No").ToString)
-                        paramCustomerName = New SqlParameter("@CustomerName", drHeaderRow("Delivery_FirstName") & " " & drHeaderRow("Delivery_LastName"))
-                        paramAddress1 = New SqlParameter("@Add1", drHeaderRow("Delivery_HouseNumber"))
-                        paramAddress2 = New SqlParameter("@Add2", drHeaderRow("Delivery_Address"))
-                        paramAddress3 = New SqlParameter("@Add3", drHeaderRow("Delivery_City"))
-                        paramAddress4 = New SqlParameter("@Add4", drHeaderRow("Delivery_Country"))
-                        paramAddress5 = New SqlParameter("@Add5", drHeaderRow("Delivery_PostCode"))
-                        paramEmail = New SqlParameter("@Email", drHeaderRow("Billing_Email"))
-                        paramPhone = New SqlParameter("@Phone", drHeaderRow("Billing_PhoneNo"))
-                        If SAMPLE_DISCOUNT_ON = True Then
-                            paramCouponCode = New SqlParameter("@CouponCode", strCouponCode)
-                            paramCouponExpiry = New SqlParameter("@CouponExpiry", DateSerial(dateCouponExpiry.Year, dateCouponExpiry.Month, dateCouponExpiry.Day))  ' Remove the time element from the supplied date
-                            paramCouponPercent = New SqlParameter("@CouponPercent", intCouponDiscount)
-                        Else
-                            paramCouponCode = New SqlParameter("@CouponCode", DBNull.Value)
-                            paramCouponExpiry = New SqlParameter("@CouponExpiry", DBNull.Value)
-                            paramCouponPercent = New SqlParameter("@CouponPercent", DBNull.Value)
-                        End If
-                        cmd.Parameters.Add(paramOrderDate)
-                        cmd.Parameters.Add(paramOrderOriginSite)
-                        cmd.Parameters.Add(paramOrderOriginNumber)
-                        cmd.Parameters.Add(paramCustomerName)
-                        cmd.Parameters.Add(paramAddress1)
-                        cmd.Parameters.Add(paramAddress2)
-                        cmd.Parameters.Add(paramAddress3)
-                        cmd.Parameters.Add(paramAddress4)
-                        cmd.Parameters.Add(paramAddress5)
-                        cmd.Parameters.Add(paramEmail)
-                        cmd.Parameters.Add(paramPhone)
-                        cmd.Parameters.Add(paramCouponCode)
-                        cmd.Parameters.Add(paramCouponExpiry)
-                        cmd.Parameters.Add(paramCouponPercent)
-
-                        ' --- Create fabric sample parameters ---
-                        For j = 1 To 10
-                            If (i + j) <= dtFabricSampleLines.Rows.Count Then
-                                ' Write in parameter values here
-                                lstParamsSampleCodes.Add(New SqlParameter("@SampleCode" & j.ToString, dtFabricSampleLines.Rows(j - 1)("FabricCode")))
-                                lstParamsSampleNames.Add(New SqlParameter("@SampleDescription" & j.ToString, dtFabricSampleLines.Rows(j - 1)("FabricName")))
-                            Else
-                                ' Write in null values for parameters here
-                                lstParamsSampleCodes.Add(New SqlParameter("@SampleCode" & j.ToString, DBNull.Value))
-                                lstParamsSampleNames.Add(New SqlParameter("@SampleDescription" & j.ToString, DBNull.Value))
-                            End If
-                            cmd.Parameters.Add(lstParamsSampleCodes(j - 1))
-                            cmd.Parameters.Add(lstParamsSampleNames(j - 1))
-                        Next
-
-                        ' --- Execute query here. 1 line of 10 samples will be added. ---
-                        Using conn As SqlConnection = New SqlConnection(ConfigurationManager.ConnectionStrings("PRODSYS").ConnectionString)
-                            cmd.Connection = conn
-
-                            Try
-                                conn.Open()
-                                cmd.ExecuteNonQuery()
-                            Catch ex As Exception
-                                Throw ex
-                            End Try
-
-                        End Using
-
-                    Next    ' Loop to next set of 10 samples within this order
-
-
-                    ' --- Write sample code into the website's Offers_PercentOff table ---
-                    If SAMPLE_DISCOUNT_ON = True Then
-                        Write_FabricSamples_DiscountToWebsiteDB(strWebsite, strCouponCode, intCouponDiscount, dateCouponExpiry)
-                    End If
-
-                End If
-            Next    ' Loop to next order
-
-            If dtFabricSampleHeaders.Rows.Count <= 0 Then
-                strOutput = "No fabric samples to import"
+            ' --- pre-calculating ProdSys site name ---
+            If strWebsite = "UK" Then
+                strSiteName = "BLOCUKWebsite"
+            ElseIf strWebsite = "IE" Then
+                strSiteName = "BlocBlindsIE"
             Else
-                strOutput = dtFabricSampleHeaders.Rows.Count & " fabric samples imported"
+                strSiteName = "BlocBlinds" & strWebsite
             End If
-        Catch ex As Exception
-            strOutput = "Error importing fabric samples: " & ex.Message
-        End Try
+
+
+            ' --- Looping through each order header that has fabric samples ---
+            Try
+                dtFabricSampleHeaders = Get_FabricSamplesToImport_OrderHeaders(strWebsite)
+                For Each drHeaderRow As DataRow In dtFabricSampleHeaders.Rows
+
+                    ' --- pre-calculating fabric sample coupon information ---
+                    strCouponCode = Importer.Get_FabricSamples_DiscountCode(CInt(drHeaderRow("Order_No").ToString), strWebsite)
+                    intCouponDiscount = Importer.Get_FabricSamples_Discount(strWebsite)
+                    dateCouponExpiry = Importer.Get_FabricSamples_DiscountExpiry()
+
+                    ' --- Getting all fabric sample order lines for this order ---
+                    dtFabricSampleLines = Get_FabricSamplesToImport_OrderLines(strWebsite, CInt(drHeaderRow("Order_No")))
+                    If dtFabricSampleLines.Rows.Count > 0 Then
+
+                        ' --- Loop through each set of 10 fabric samples in the order ---
+                        For i = 0 To dtFabricSampleLines.Rows.Count - 1 Step 10
+
+                            ' --- Create command and header-level parameters ---
+                            cmd = New SqlCommand
+                            lstParamsSampleCodes = New List(Of SqlParameter)
+                            lstParamsSampleNames = New List(Of SqlParameter)
+                            cmd.CommandText = query
+                            paramOrderDate = New SqlParameter("@FabricSampleOrderDate", drHeaderRow("DateEntered"))
+                            paramOrderOriginSite = New SqlParameter("@OrderOrigination", strSiteName)
+                            paramOrderOriginNumber = New SqlParameter("@OriginatingOrderNumber", drHeaderRow("Order_No").ToString)
+                            paramCustomerName = New SqlParameter("@CustomerName", drHeaderRow("Delivery_FirstName") & " " & drHeaderRow("Delivery_LastName"))
+                            paramAddress1 = New SqlParameter("@Add1", drHeaderRow("Delivery_HouseNumber"))
+                            paramAddress2 = New SqlParameter("@Add2", drHeaderRow("Delivery_Address"))
+                            paramAddress3 = New SqlParameter("@Add3", drHeaderRow("Delivery_City"))
+                            paramAddress4 = New SqlParameter("@Add4", drHeaderRow("Delivery_Country"))
+                            paramAddress5 = New SqlParameter("@Add5", drHeaderRow("Delivery_PostCode"))
+                            paramEmail = New SqlParameter("@Email", drHeaderRow("Billing_Email"))
+                            paramPhone = New SqlParameter("@Phone", drHeaderRow("Billing_PhoneNo"))
+                            If SAMPLE_DISCOUNT_ON = True Then
+                                paramCouponCode = New SqlParameter("@CouponCode", strCouponCode)
+                                paramCouponExpiry = New SqlParameter("@CouponExpiry", DateSerial(dateCouponExpiry.Year, dateCouponExpiry.Month, dateCouponExpiry.Day))  ' Remove the time element from the supplied date
+                                paramCouponPercent = New SqlParameter("@CouponPercent", intCouponDiscount)
+                            Else
+                                paramCouponCode = New SqlParameter("@CouponCode", DBNull.Value)
+                                paramCouponExpiry = New SqlParameter("@CouponExpiry", DBNull.Value)
+                                paramCouponPercent = New SqlParameter("@CouponPercent", DBNull.Value)
+                            End If
+                            cmd.Parameters.Add(paramOrderDate)
+                            cmd.Parameters.Add(paramOrderOriginSite)
+                            cmd.Parameters.Add(paramOrderOriginNumber)
+                            cmd.Parameters.Add(paramCustomerName)
+                            cmd.Parameters.Add(paramAddress1)
+                            cmd.Parameters.Add(paramAddress2)
+                            cmd.Parameters.Add(paramAddress3)
+                            cmd.Parameters.Add(paramAddress4)
+                            cmd.Parameters.Add(paramAddress5)
+                            cmd.Parameters.Add(paramEmail)
+                            cmd.Parameters.Add(paramPhone)
+                            cmd.Parameters.Add(paramCouponCode)
+                            cmd.Parameters.Add(paramCouponExpiry)
+                            cmd.Parameters.Add(paramCouponPercent)
+
+                            ' --- Create fabric sample parameters ---
+                            For j = 1 To 10
+                                If (i + j) <= dtFabricSampleLines.Rows.Count Then
+                                    ' Write in parameter values here
+                                    lstParamsSampleCodes.Add(New SqlParameter("@SampleCode" & j.ToString, dtFabricSampleLines.Rows(j - 1)("FabricCode")))
+                                    lstParamsSampleNames.Add(New SqlParameter("@SampleDescription" & j.ToString, dtFabricSampleLines.Rows(j - 1)("FabricName")))
+                                Else
+                                    ' Write in null values for parameters here
+                                    lstParamsSampleCodes.Add(New SqlParameter("@SampleCode" & j.ToString, DBNull.Value))
+                                    lstParamsSampleNames.Add(New SqlParameter("@SampleDescription" & j.ToString, DBNull.Value))
+                                End If
+                                cmd.Parameters.Add(lstParamsSampleCodes(j - 1))
+                                cmd.Parameters.Add(lstParamsSampleNames(j - 1))
+                            Next
+
+                            ' --- Execute query here. 1 line of 10 samples will be added. ---
+                            Using conn As SqlConnection = New SqlConnection(ConfigurationManager.ConnectionStrings("PRODSYS").ConnectionString)
+                                cmd.Connection = conn
+
+                                Try
+                                    conn.Open()
+                                    cmd.ExecuteNonQuery()
+                                Catch ex As Exception
+                                    Throw ex
+                                End Try
+
+                            End Using
+
+                        Next    ' Loop to next set of 10 samples within this order
+
+
+                        ' --- Write sample code into the website's Offers_PercentOff table ---
+                        If SAMPLE_DISCOUNT_ON = True Then
+                            Write_FabricSamples_DiscountToWebsiteDB(strWebsite, strCouponCode, intCouponDiscount, dateCouponExpiry)
+                        End If
+
+                    End If
+                Next    ' Loop to next order
+
+                If dtFabricSampleHeaders.Rows.Count <= 0 Then
+                    strOutput = "No fabric samples to import"
+                Else
+                    strOutput = dtFabricSampleHeaders.Rows.Count & " fabric samples imported"
+                End If
+            Catch ex As Exception
+                strOutput = "Error importing fabric samples: " & ex.Message
+            End Try
+        End If
 
 
         ' --- Returning result ---
@@ -3034,7 +3059,7 @@ Module Importer
         Select Case strWebsite.ToUpper()
             Case enumWebsites.UK.ToString().ToUpper(), enumWebsites.IE.ToString().ToUpper(), enumWebsites.TEST.ToString().ToUpper()
                 lstOutput = ImportOrders_BlocBlinds(strWebsite)
-            Case enumWebsites.BFSUK.ToString().ToUpper()
+            Case enumWebsites.BPPE_UK.ToString().ToUpper()
                 lstOutput = ImportOrders_BlocFaceShields(strWebsite)
             Case Else
                 ' Skip
@@ -3078,7 +3103,7 @@ Module Importer
         ' --- Writing out queries ---
         Dim sbQuery As New System.Text.StringBuilder
         sbQuery.Append("SELECT Order_No, DateEntered, QuotedDeliveryDate, Billing_Email, Billing_PhoneNo, Delivery_FirstName, ")
-        sbQuery.Append("Delivery_LastName, Delivery_HouseNumber, Delivery_Address, Delivery_City, Delivery_Country, Delivery_PostCode, DeliveryCost ")
+        sbQuery.Append("Delivery_LastName, Delivery_HouseNumber, Delivery_Address, Delivery_City, Delivery_Country, Delivery_PostCode, DeliveryCost, FBDaTOO ")
         sbQuery.Append("FROM ORD_HEADER ")
         sbQuery.Append("WHERE OrderStatus = 'PAY_AUTH' And ProductionSystemID IS NULL ")
         sbQuery.Append("AND ((PaymentType <> 'FREE') ")
@@ -3350,7 +3375,7 @@ Module Importer
 
 
         ' --- Creating Item Code Prefix translation list ---
-        lst_ProdSys_ItemCodePrefix.Add("additionalfabric", "BRBAF")
+        lst_ProdSys_ItemCodePrefix.Add("additionalfabric", "BRB-AF")
         lst_ProdSys_ItemCodePrefix.Add("blocout40", "BLOCOUT40")
         lst_ProdSys_ItemCodePrefix.Add("blocout80", "BLOCOUT80")
         lst_ProdSys_ItemCodePrefix.Add("customskylight", "NON-STANDARD")

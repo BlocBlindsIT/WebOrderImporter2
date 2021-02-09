@@ -76,7 +76,7 @@ Public Class Main
 
             ' --- Selecting appropriate query ---
             Select Case strSite
-                Case "BFSUK"
+                Case "BPPE_UK"
                     strSqlQuery = sbBFSQuery.ToString()
                 Case Else
                     strSqlQuery = sbQuery.ToString()
