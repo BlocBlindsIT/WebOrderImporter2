@@ -18,6 +18,7 @@ Public Class Main
 
         RefreshMainForm()
 
+
     End Sub
 
     Private Sub Main_Load(sender As Object, e As EventArgs) Handles Me.Load
@@ -136,11 +137,30 @@ Public Class Main
         If lvwAvailableWebsites.SelectedItems.Count >= 1 Then
             Dim lstOutputText As List(Of String)
             Dim strWebsite As String = lvwAvailableWebsites.SelectedItems(0).Text
-            Me.Console_WriteMessage("Importing from site", lvwAvailableWebsites.SelectedItems(0).Text, True)
-            lstOutputText = Importer.ImportOrders(lvwAvailableWebsites.SelectedItems(0).Text)
-            For Each strOutput As String In lstOutputText
-                Me.Console_WriteMessage(strOutput, strWebsite)
-            Next
+
+
+            ' --- Attempting to set Order Import lock ---
+            Dim resLocked As ResultBoolean = ImportLock_Set()
+            If resLocked.Result = True Then
+
+
+                ' --- Attempting import ---
+                Me.Console_WriteMessage("Importing from site", lvwAvailableWebsites.SelectedItems(0).Text, True)
+                lstOutputText = Importer.ImportOrders(lvwAvailableWebsites.SelectedItems(0).Text)
+                For Each strOutput As String In lstOutputText
+                    Me.Console_WriteMessage(strOutput, strWebsite)
+                Next
+
+
+                ' --- Attempting to release lock on database ---
+                Dim resLockReleased As ResultBoolean = ImportLock_Release()
+                If resLockReleased.Result = False Then
+                    Me.Console_WriteMessage(resLockReleased.Message())
+                End If
+            Else
+                Me.Console_WriteMessage(resLocked.Message)
+            End If
+
         Else
             Me.Console_WriteMessage("Please select a site")
         End If

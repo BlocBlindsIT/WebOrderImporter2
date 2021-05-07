@@ -129,6 +129,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="ResultBoolean.vb" />
     <Compile Include="Utilities.vb" />
   </ItemGroup>
   <ItemGroup>

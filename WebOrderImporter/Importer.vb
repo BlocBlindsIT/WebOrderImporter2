@@ -6,6 +6,7 @@ Module Importer
 
     Const SAMPLE_DISCOUNT_ON As Boolean = False
     Const CURRENCY_CONVERT_POUNDS_TO_EUROS As Decimal = 1.2
+    Const PRODSYS_LOCK_USERNAME As String = "BLUK"
 
     ' --- Class level variables ---
     Dim lst_ProdSys_ProductNames As Dictionary(Of String, String)           ' Translates Website Product names into ProdSys product names
@@ -1420,23 +1421,45 @@ Module Importer
         End Select
 
         ' -- ChainType --
-        If drOrderLine("ProductName").ToString.ToLower = "blocout40" _
-        Or drOrderLine("ProductName").ToString.ToLower = "smartmotorcharger" _
-        Or drOrderLine("ProductName").ToString.ToLower = "smartremote" _
-        Or drOrderLine("ProductName").ToString.ToLower = "smarthub" _
-        Or drOrderLine("ProductName").ToString.ToLower = "smartrepeater" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshield_1b12" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshield_5b12" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshield_20b12" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b1" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b2" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b3" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b4" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b5" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b12" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b24" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_1b40" _
-        Or drOrderLine("ProductName").ToString.ToLower = "faceshieldkit_4b24" Then
+        If drOrderLine("ProductName").ToString().ToLower() = "blocout40" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "venetian" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "smartmotorcharger" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "smartremote" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "smarthub" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "smartrepeater" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshield_1b12" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshield_5b12" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshield_20b12" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b1" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b2" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b3" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b4" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b5" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b12" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b24" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_1b40" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "faceshieldkit_4b24" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "BO40_Brakes_Cream" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "BO40_Brakes_Grey" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "BO40_Brakes_White" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "BO40_Fittings" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "BO80_Fittings_Recess" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "BO80_Fittings_Surface" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "PRB_Fittings_Recess" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "PRB_Fittings_Surface" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "RB_Brackets_Black" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "RB_Brackets_Grey" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "RB_Brackets_White" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "RB_DF_Brackets_White" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "RB_M_Brackets_Black" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "RB_M_Brackets_White" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "SKY_Brakes_Cream" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "SKY_Brakes_Grey" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "SKY_Brakes_White" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "SS_Battery_Post_03_19" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "SS_Battery_Pre_03_19" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "ZRB_Fittings_Recess" _
+        Or drOrderLine("ProductName").ToString().ToLower() = "ZRB_Fittings_Surface" Then
             strChainType_value = ""
         ElseIf blnIsMotorised = True Then
             strChainType_value = "MOTORISED"
@@ -2472,21 +2495,42 @@ Module Importer
                 strResult = "<prefix>|NA|Remote"
 
             Case "smartmotorcharger",
-                 "smartremote",
-                 "smarthub",
-                 "smartrepeater",
-                 "faceshield_1b12",
-                 "faceshield_5b12",
-                 "faceshield_20b12",
-                 "faceshieldkit_1b1",
-                 "faceshieldkit_1b2",
-                 "faceshieldkit_1b3",
-                 "faceshieldkit_1b4",
-                 "faceshieldkit_1b5",
-                 "faceshieldkit_1b12",
-                 "faceshieldkit_1b24",
-                 "faceshieldkit_1b40",
-                 "faceshieldkit_4b24"
+                "smartremote",
+                "smarthub",
+                "smartrepeater",
+                "faceshield_1b12",
+                "faceshield_5b12",
+                "faceshield_20b12",
+                "faceshieldkit_1b1",
+                "faceshieldkit_1b2",
+                "faceshieldkit_1b3",
+                "faceshieldkit_1b4",
+                "faceshieldkit_1b5",
+                "faceshieldkit_1b12",
+                "faceshieldkit_1b24",
+                "faceshieldkit_1b40",
+                "faceshieldkit_4b24",
+                "bo40_brakes_cream",
+                "bo40_brakes_grey",
+                "bo40_brakes_white",
+                "bo40_fittings",
+                "bo80_fittings_recess",
+                "bo80_fittings_surface",
+                "prb_fittings_recess",
+                "prb_fittings_surface",
+                "rb_brackets_black",
+                "rb_brackets_grey",
+                "rb_brackets_white",
+                "rb_df_brackets_white",
+                "rb_m_brackets_black",
+                "rb_m_brackets_white",
+                "sky_brakes_cream",
+                "sky_brakes_grey",
+                "sky_brakes_white",
+                "ss_battery_post_03_19",
+                "ss_battery_pre_03_19",
+                "zrb_fittings_recess",
+                "zrb_fittings_surface"
                 strResult = drOrderLine("Product_ItemCode")
 
             Case "rollerblindextend_black"
@@ -2507,6 +2551,9 @@ Module Importer
 
             Case "measureprotect"
                 strResult = "<prefix>|NA|NA"
+
+            Case "venetian"
+                strResult = "<prefix>-<widthxheight>|na|<fabriccode>"
 
             Case Else
                 strResult = "<prefix>|NA|NA"
@@ -2649,25 +2696,46 @@ Module Importer
         ' --- Component items have different item_description rules. Detecting item type ---
         Select Case strAppName.ToLower
             Case "smartmotorcharger",
-                 "smartremote",
-                 "smarthub",
-                 "smartrepeater",
-                 "rollerblindextend_black",
-                 "rollerblindextend_blue",
-                 "rollerblindextend_red",
-                 "rollerblindextend_green",
-                 "faceshield_1b12",
-                 "faceshield_5b12",
-                 "faceshield_20b12",
-                 "faceshieldkit_1b1",
-                 "faceshieldkit_1b2",
-                 "faceshieldkit_1b3",
-                 "faceshieldkit_1b4",
-                 "faceshieldkit_1b5",
-                 "faceshieldkit_1b12",
-                 "faceshieldkit_1b24",
-                 "faceshieldkit_1b40",
-                 "faceshieldkit_4b24"
+                "smartremote",
+                "smarthub",
+                "smartrepeater",
+                "rollerblindextend_black",
+                "rollerblindextend_blue",
+                "rollerblindextend_red",
+                "rollerblindextend_green",
+                "faceshield_1b12",
+                "faceshield_5b12",
+                "faceshield_20b12",
+                "faceshieldkit_1b1",
+                "faceshieldkit_1b2",
+                "faceshieldkit_1b3",
+                "faceshieldkit_1b4",
+                "faceshieldkit_1b5",
+                "faceshieldkit_1b12",
+                "faceshieldkit_1b24",
+                "faceshieldkit_1b40",
+                "faceshieldkit_4b24",
+                "bo40_brakes_cream",
+                "bo40_brakes_grey",
+                "bo40_brakes_white",
+                "bo40_fittings",
+                "bo80_fittings_recess",
+                "bo80_fittings_surface",
+                "prb_fittings_recess",
+                "prb_fittings_surface",
+                "rb_brackets_black",
+                "rb_brackets_grey",
+                "rb_brackets_white",
+                "rb_df_brackets_white",
+                "rb_m_brackets_black",
+                "rb_m_brackets_white",
+                "sky_brakes_cream",
+                "sky_brakes_grey",
+                "sky_brakes_white",
+                "ss_battery_post_03_19",
+                "ss_battery_pre_03_19",
+                "zrb_fittings_recess",
+                "zrb_fittings_surface"
 
                 ' ===== Using Component Item description rules =====
                 strResult = drOrderLine("ExportAsName").ToString
@@ -3043,6 +3111,133 @@ Module Importer
     End Function
 
 
+    Function ImportLock_Release() As ResultBoolean
+
+
+        ' --- Defining objects and variables ---
+        Dim blnResult As Boolean = False                                ' Fail-safe value
+        Dim strOutputMessage As String = "Unknown error occurred"       ' Fail-safe value
+        Dim sbQuery As New StringBuilder
+        Dim dtOutput As New DataTable
+        Dim da As SqlDataAdapter
+
+
+        ' --- Writing out query ---
+        sbQuery.AppendLine("UPDATE Settings SET SettingValue = '' WHERE SettingName = 'IMPORTINGLOCK' AND (SettingValue = '' OR SettingValue = Null OR SettingValue LIKE '" & PRODSYS_LOCK_USERNAME & "%'); ")
+        sbQuery.AppendLine("IF @@ROWCOUNT >= 1 ")
+        sbQuery.AppendLine("	SELECT 1 As Result, 'Database lock released' As [Message]; ")
+        sbQuery.AppendLine("ELSE ")
+        sbQuery.AppendLine("	SELECT 0 As Result, CONCAT('Could release database lock. Currently locked by ', (SELECT SettingValue FROM Settings WHERE SettingName =  'IMPORTINGLOCK')) As [Message]; ")
+
+
+        ' --- Executing command ---
+        Using connProdSys As SqlConnection = New SqlConnection(ConfigurationManager.ConnectionStrings("PRODSYS").ConnectionString)
+            da = New SqlDataAdapter(sbQuery.ToString(), connProdSys)
+            da.SelectCommand.Parameters.Add(New SqlParameter("@LockValue", PRODSYS_LOCK_USERNAME & "-" & Now().ToString()))
+            Try
+                da.Fill(dtOutput)
+                If IsNothing(dtOutput) = False Then
+                    If dtOutput.Columns.Contains("Result") And dtOutput.Columns.Contains("Message") Then
+                        If dtOutput.Rows.Count >= 1 Then
+                            If dtOutput.Rows(0)("Result").ToString() = "1" Then
+                                blnResult = True
+                            Else
+                                blnResult = False
+                            End If
+                            strOutputMessage = dtOutput.Rows(0)("Message").ToString()
+                        Else
+                            blnResult = False
+                            strOutputMessage = "No data was received from database"
+                        End If
+                    Else
+                        blnResult = False
+                        strOutputMessage = "Invalid response received from database"
+                    End If
+                Else
+                    blnResult = False
+                    strOutputMessage = "No response received from database"
+                End If
+            Catch ex As Exception
+                blnResult = False
+                strOutputMessage = ex.Message & vbNewLine & ex.StackTrace
+            Finally
+                da.Dispose()
+            End Try
+        End Using
+
+
+        ' --- Returning result ---
+        Return New ResultBoolean(blnResult, strOutputMessage)
+
+    End Function
+
+
+    Function ImportLock_Set() As ResultBoolean
+
+
+        ' --- Defining objects and variables ---
+        Dim blnResult As Boolean = False                                ' Fail-safe value
+        Dim strOutputMessage As String = "Unknown error occurred"       ' Fail-safe value
+        Dim sbQuery As New StringBuilder
+        Dim dtOutput As New DataTable
+        Dim da As SqlDataAdapter
+
+
+        ' --- Writing out query ---
+        sbQuery.AppendLine("IF EXISTS(SELECT 1 FROM Settings WHERE SettingName = 'IMPORTINGLOCK' AND (SettingValue = '' OR SettingValue = Null OR SettingValue LIKE '" & PRODSYS_LOCK_USERNAME & "%')) ")
+        sbQuery.AppendLine("BEGIN ")
+        sbQuery.AppendLine("	UPDATE Settings SET SettingValue = @LockValue WHERE SettingName = 'IMPORTINGLOCK'; ")
+        sbQuery.AppendLine("	IF (SELECT @@ROWCOUNT) >= 1 ")
+        sbQuery.AppendLine("		SELECT 1 As Result, 'Database lock set' As [Message]; ")
+        sbQuery.AppendLine("	ELSE ")
+        sbQuery.AppendLine("		SELECT 0 As Result, 'Could not set database lock' As [Message]; ")
+        sbQuery.AppendLine("END ")
+        sbQuery.AppendLine("ELSE ")
+        sbQuery.AppendLine("SELECT 0 As Result, CONCAT('Database is locked for importing: ',(SELECT SettingValue FROM Settings WHERE SettingName = 'IMPORTINGLOCK')) As [Message]; ")
+
+
+        ' --- Executing command ---
+        Using connProdSys As SqlConnection = New SqlConnection(ConfigurationManager.ConnectionStrings("PRODSYS").ConnectionString)
+            da = New SqlDataAdapter(sbQuery.ToString(), connProdSys)
+            da.SelectCommand.Parameters.Add(New SqlParameter("@LockValue", PRODSYS_LOCK_USERNAME & "-" & Now().ToString()))
+            Try
+                da.Fill(dtOutput)
+                If IsNothing(dtOutput) = False Then
+                    If dtOutput.Columns.Contains("Result") And dtOutput.Columns.Contains("Message") Then
+                        If dtOutput.Rows.Count >= 1 Then
+                            If dtOutput.Rows(0)("Result").ToString() = "1" Then
+                                blnResult = True
+                            Else
+                                blnResult = False
+                            End If
+                            strOutputMessage = dtOutput.Rows(0)("Message").ToString()
+                        Else
+                            blnResult = False
+                            strOutputMessage = "No data was received from database"
+                        End If
+                    Else
+                        blnResult = False
+                        strOutputMessage = "Invalid response received from database"
+                    End If
+                Else
+                    blnResult = False
+                    strOutputMessage = "No response received from database"
+                End If
+            Catch ex As Exception
+                blnResult = False
+                strOutputMessage = ex.Message & vbNewLine & ex.StackTrace
+            Finally
+                da.Dispose()
+            End Try
+        End Using
+
+
+        ' --- Returning result ---
+        Return New ResultBoolean(blnResult, strOutputMessage)
+
+    End Function
+
+
     ''' <summary>
     ''' This function acts as a hub for different websites' importer functions.
     ''' </summary>
@@ -3375,149 +3570,215 @@ Module Importer
 
 
         ' --- Creating Item Code Prefix translation list ---
-        lst_ProdSys_ItemCodePrefix.Add("additionalfabric", "BRB-AF")
-        lst_ProdSys_ItemCodePrefix.Add("blocout40", "BLOCOUT40")
-        lst_ProdSys_ItemCodePrefix.Add("blocout80", "BLOCOUT80")
-        lst_ProdSys_ItemCodePrefix.Add("customskylight", "NON-STANDARD")
-        lst_ProdSys_ItemCodePrefix.Add("fabricsample", "-")
-        lst_ProdSys_ItemCodePrefix.Add("faceshield_1b12", "")           ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshield_5b12", "")           ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshield_20b12", "")          ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b1", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b2", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b3", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b4", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b5", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b12", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b24", "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b40", "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_4b24", "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("measure protect", "MEASUREPROTECT")
-        lst_ProdSys_ItemCodePrefix.Add("multichannelremote", "MISC-NA-NA")
-        lst_ProdSys_ItemCodePrefix.Add("pelmet", "BPL")
-        lst_ProdSys_ItemCodePrefix.Add("pole2m", "POLE")
-        lst_ProdSys_ItemCodePrefix.Add("pole3m", "POLE")
-        lst_ProdSys_ItemCodePrefix.Add("premiumrollerblind", "CRB")
-        lst_ProdSys_ItemCodePrefix.Add("premiumskylight", "P")
-        lst_ProdSys_ItemCodePrefix.Add("rollerblind", "BRB")
-        lst_ProdSys_ItemCodePrefix.Add("rollerblinddrillfree", "BRB-DF")
-        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_black", "")   ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_blue", "")    ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_red", "")     ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_green", "")   ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("rollerblindmotorised", "BRB-M")
-        lst_ProdSys_ItemCodePrefix.Add("smarthub", "")                  ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("smartmotorcharger", "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("smartremote", "")               ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("smartrepeater", "")             ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
-        lst_ProdSys_ItemCodePrefix.Add("singlechannelremote", "MISC-NA-NA")
-        lst_ProdSys_ItemCodePrefix.Add("solarskylight", "BS")
-        lst_ProdSys_ItemCodePrefix.Add("twinrollerblind", "BTRB")
-        lst_ProdSys_ItemCodePrefix.Add("virtualfabric", "BRBAF")
-        lst_ProdSys_ItemCodePrefix.Add("zebrarollerblind", "BZRB")
+        lst_ProdSys_ItemCodePrefix.Add("additionalfabric".ToLower(), "BRB-AF")
+        lst_ProdSys_ItemCodePrefix.Add("blocout40".ToLower(), "BLOCOUT40")
+        lst_ProdSys_ItemCodePrefix.Add("blocout80".ToLower(), "BLOCOUT80")
+        lst_ProdSys_ItemCodePrefix.Add("BO40_Brakes_Cream".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("BO40_Brakes_Grey".ToLower(), "")          ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("BO40_Brakes_White".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("BO40_Fittings".ToLower(), "")             ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("BO80_Fittings_Recess".ToLower(), "")      ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("BO80_Fittings_Surface".ToLower(), "")     ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("customskylight".ToLower(), "NON-STANDARD")
+        lst_ProdSys_ItemCodePrefix.Add("fabricsample".ToLower(), "-")
+        lst_ProdSys_ItemCodePrefix.Add("faceshield_1b12".ToLower(), "")           ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshield_5b12".ToLower(), "")           ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshield_20b12".ToLower(), "")          ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b1".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b2".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b3".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b4".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b5".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b12".ToLower(), "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b24".ToLower(), "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_1b40".ToLower(), "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("faceshieldkit_4b24".ToLower(), "")        ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("measure protect".ToLower(), "MEASUREPROTECT")
+        lst_ProdSys_ItemCodePrefix.Add("multichannelremote".ToLower(), "MISC-NA-NA")
+        lst_ProdSys_ItemCodePrefix.Add("pelmet".ToLower(), "BPL")
+        lst_ProdSys_ItemCodePrefix.Add("pole2m".ToLower(), "POLE")
+        lst_ProdSys_ItemCodePrefix.Add("pole3m".ToLower(), "POLE")
+        lst_ProdSys_ItemCodePrefix.Add("PRB_Fittings_Recess".ToLower(), "")       ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("PRB_Fittings_Surface".ToLower(), "")      ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("premiumrollerblind".ToLower(), "CRB")
+        lst_ProdSys_ItemCodePrefix.Add("premiumskylight".ToLower(), "P")
+        lst_ProdSys_ItemCodePrefix.Add("RB_Brackets_Black".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("RB_Brackets_Grey".ToLower(), "")          ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("RB_Brackets_White".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("RB_DF_Brackets_White".ToLower(), "")      ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("RB_M_Brackets_Black".ToLower(), "")       ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("RB_M_Brackets_White".ToLower(), "")       ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("rollerblind".ToLower(), "BRB")
+        lst_ProdSys_ItemCodePrefix.Add("rollerblinddrillfree".ToLower(), "BRB-DF")
+        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_black".ToLower(), "")   ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_blue".ToLower(), "")    ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_red".ToLower(), "")     ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("rollerblindextend_green".ToLower(), "")   ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("rollerblindmotorised".ToLower(), "BRB-M")
+        lst_ProdSys_ItemCodePrefix.Add("singlechannelremote".ToLower(), "MISC-NA-NA")
+        lst_ProdSys_ItemCodePrefix.Add("SKY_Brakes_Cream".ToLower(), "")          ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("SKY_Brakes_Grey".ToLower(), "")           ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("SKY_Brakes_White".ToLower(), "")          ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("smarthub".ToLower(), "")                  ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("smartmotorcharger".ToLower(), "")         ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("smartremote".ToLower(), "")               ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("smartrepeater".ToLower(), "")             ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("solarskylight".ToLower(), "BS")
+        lst_ProdSys_ItemCodePrefix.Add("SS_Battery_Post_03_19".ToLower(), "")     ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("SS_Battery_Pre_03_19".ToLower(), "")      ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("twinrollerblind".ToLower(), "BTRB")
+        lst_ProdSys_ItemCodePrefix.Add("venetian".ToLower(), "BVN")
+        lst_ProdSys_ItemCodePrefix.Add("virtualfabric".ToLower(), "BRBAF")
+        lst_ProdSys_ItemCodePrefix.Add("zebrarollerblind".ToLower(), "BZRB")
+        lst_ProdSys_ItemCodePrefix.Add("ZRB_Fittings_Recess".ToLower(), "")       ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
+        lst_ProdSys_ItemCodePrefix.Add("ZRB_Fittings_Surface".ToLower(), "")      ' The prefix for this product is pulled from the Product_ItemCode field of the website's ORD_LINES table in the Build_OrderLine_Product function
 
         ' --- Creating Line Type translation list ---
-        lst_ProdSys_LineType.Add("additionalfabric", "ADDITIONALFABRIC")
-        lst_ProdSys_LineType.Add("blocout40", "BLOCOUT40")
-        lst_ProdSys_LineType.Add("blocout80", "BLOCOUT80")
-        lst_ProdSys_LineType.Add("customskylight", "CUSTOM-SKYLITE")
-        lst_ProdSys_LineType.Add("fabricsample", "-")
-        lst_ProdSys_LineType.Add("faceshield_1b12", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshield_5b12", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshield_20b12", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b1", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b2", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b3", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b4", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b5", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b12", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b24", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_1b40", "COMPONENT")
-        lst_ProdSys_LineType.Add("faceshieldkit_4b24", "COMPONENT")
-        lst_ProdSys_LineType.Add("measure protect", "MEASUREPROTECT")
-        lst_ProdSys_LineType.Add("multichannelremote", "REMOTE")
-        lst_ProdSys_LineType.Add("pelmet", "PELMET")
-        lst_ProdSys_LineType.Add("pole2m", "ACCESSORIES")
-        lst_ProdSys_LineType.Add("pole3m", "ACCESSORIES")
-        lst_ProdSys_LineType.Add("premiumrollerblind", "PREMIUMROLLERBLIND")
-        lst_ProdSys_LineType.Add("premiumskylight", "SKYLITE")
-        lst_ProdSys_LineType.Add("rollerblind", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("rollerblinddrillfree", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("rollerblindextend_black", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("rollerblindextend_blue", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("rollerblindextend_red", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("rollerblindextend_green", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("rollerblindmotorised", "ROLLERBLIND")
-        lst_ProdSys_LineType.Add("smarthub", "COMPONENT")
-        lst_ProdSys_LineType.Add("smartmotorcharger", "COMPONENT")
-        lst_ProdSys_LineType.Add("smartremote", "COMPONENT")
-        lst_ProdSys_LineType.Add("smartrepeater", "COMPONENT")
-        lst_ProdSys_LineType.Add("singlechannelremote", "REMOTE")
-        lst_ProdSys_LineType.Add("solarskylight", "SOLARSKYLITE")
-        lst_ProdSys_LineType.Add("twinrollerblind", "ROLLERBLIND-TWIN")
-        lst_ProdSys_LineType.Add("virtualfabric", "ADDITIONALFABRIC")
-        lst_ProdSys_LineType.Add("zebrarollerblind", "ZEBRAROLLERBLIND")
+        lst_ProdSys_LineType.Add("additionalfabric".ToLower(), "ADDITIONALFABRIC")
+        lst_ProdSys_LineType.Add("blocout40".ToLower(), "BLOCOUT40")
+        lst_ProdSys_LineType.Add("blocout80".ToLower(), "BLOCOUT80")
+        lst_ProdSys_LineType.Add("BO40_Brakes_Cream".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("BO40_Brakes_Grey".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("BO40_Brakes_White".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("BO40_Fittings".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("BO80_Fittings_Recess".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("BO80_Fittings_Surface".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("customskylight".ToLower(), "CUSTOM-SKYLITE")
+        lst_ProdSys_LineType.Add("fabricsample".ToLower(), "-")
+        lst_ProdSys_LineType.Add("faceshield_1b12".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshield_5b12".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshield_20b12".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b1".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b2".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b3".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b4".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b5".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b12".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b24".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_1b40".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("faceshieldkit_4b24".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("measure protect".ToLower(), "MEASUREPROTECT")
+        lst_ProdSys_LineType.Add("multichannelremote".ToLower(), "REMOTE")
+        lst_ProdSys_LineType.Add("pelmet".ToLower(), "PELMET")
+        lst_ProdSys_LineType.Add("pole2m".ToLower(), "ACCESSORIES")
+        lst_ProdSys_LineType.Add("pole3m".ToLower(), "ACCESSORIES")
+        lst_ProdSys_LineType.Add("PRB_Fittings_Recess".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("PRB_Fittings_Surface".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("premiumrollerblind".ToLower(), "PREMIUMROLLERBLIND")
+        lst_ProdSys_LineType.Add("premiumskylight".ToLower(), "SKYLITE")
+        lst_ProdSys_LineType.Add("RB_Brackets_Black".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("RB_Brackets_Grey".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("RB_Brackets_White".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("RB_DF_Brackets_White".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("RB_M_Brackets_Black".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("RB_M_Brackets_White".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("rollerblind".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("rollerblinddrillfree".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("rollerblindextend_black".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("rollerblindextend_blue".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("rollerblindextend_red".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("rollerblindextend_green".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("rollerblindmotorised".ToLower(), "ROLLERBLIND")
+        lst_ProdSys_LineType.Add("smarthub".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("smartmotorcharger".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("smartremote".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("smartrepeater".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("singlechannelremote".ToLower(), "REMOTE")
+        lst_ProdSys_LineType.Add("SKY_Brakes_Cream".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("SKY_Brakes_Grey".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("SKY_Brakes_White".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("solarskylight".ToLower(), "SOLARSKYLITE")
+        lst_ProdSys_LineType.Add("SS_Battery_Post_03_19".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("SS_Battery_Pre_03_19".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("twinrollerblind".ToLower(), "ROLLERBLIND-TWIN")
+        lst_ProdSys_LineType.Add("venetian".ToLower(), "VENETIAN")
+        lst_ProdSys_LineType.Add("virtualfabric".ToLower(), "ADDITIONALFABRIC")
+        lst_ProdSys_LineType.Add("zebrarollerblind".ToLower(), "ZEBRAROLLERBLIND")
+        lst_ProdSys_LineType.Add("ZRB_Fittings_Recess".ToLower(), "COMPONENT")
+        lst_ProdSys_LineType.Add("ZRB_Fittings_Surface".ToLower(), "COMPONENT")
 
         ' --- Creating ProdSys product name translation list ---
-        lst_ProdSys_ProductNames.Add("additionalfabric", "rollerblind-additionalfabric")
-        lst_ProdSys_ProductNames.Add("blocout40", "blocout40")
-        lst_ProdSys_ProductNames.Add("blocout80", "blocout80")
-        lst_ProdSys_ProductNames.Add("customskylight", "skylight-custom")
-        lst_ProdSys_ProductNames.Add("fabricsample", "-")
-        lst_ProdSys_ProductNames.Add("faceshield_1b12", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshield_5b12", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshield_20b12", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b1", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b2", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b3", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b4", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b5", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b12", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b24", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_1b40", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("faceshieldkit_4b24", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("measure protect", "measure protect")
-        lst_ProdSys_ProductNames.Add("multichannelremote", "multi-channel remote")
-        lst_ProdSys_ProductNames.Add("pelmet", "pelmet")
-        lst_ProdSys_ProductNames.Add("pole2m", "2m telescopic pole")
-        lst_ProdSys_ProductNames.Add("pole3m", "3m telescopic pole")
-        lst_ProdSys_ProductNames.Add("premiumrollerblind", "premiumrollerblind")
-        lst_ProdSys_ProductNames.Add("premiumskylight", "skylightplus")
-        lst_ProdSys_ProductNames.Add("rollerblind", "rollerblind")
-        lst_ProdSys_ProductNames.Add("rollerblinddrillfree", "rollerblind-drillfree")
-        lst_ProdSys_ProductNames.Add("rollerblindextend_black", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("rollerblindextend_blue", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("rollerblindextend_red", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("rollerblindextend_green", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("rollerblindmotorised", "rollerblind-motorised")
-        lst_ProdSys_ProductNames.Add("smarthub", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("smartmotorcharger", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("smartremote", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("smartrepeater", "COMPONENT")
-        lst_ProdSys_ProductNames.Add("singlechannelremote", "single-channel remote")
-        lst_ProdSys_ProductNames.Add("solarskylight", "skylightplus")
-        lst_ProdSys_ProductNames.Add("twinrollerblind", "rollerblind")                                  ' Twin roller blinds import as two rollerblind lines (with a couple of changes)
-        lst_ProdSys_ProductNames.Add("virtualfabric", "rollerblind-additionalfabric")
-        lst_ProdSys_ProductNames.Add("zebrarollerblind", "zebrarollerblind")
+        lst_ProdSys_ProductNames.Add("additionalfabric".ToLower(), "rollerblind-additionalfabric")
+        lst_ProdSys_ProductNames.Add("blocout40".ToLower(), "blocout40")
+        lst_ProdSys_ProductNames.Add("blocout80".ToLower(), "blocout80")
+        lst_ProdSys_ProductNames.Add("BO40_Brakes_Cream".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("BO40_Brakes_Grey".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("BO40_Brakes_White".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("BO40_Fittings".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("BO80_Fittings_Recess".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("BO80_Fittings_Surface".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("customskylight".ToLower(), "skylight-custom")
+        lst_ProdSys_ProductNames.Add("fabricsample".ToLower(), "-")
+        lst_ProdSys_ProductNames.Add("faceshield_1b12".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshield_5b12".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshield_20b12".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b1".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b2".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b3".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b4".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b5".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b12".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b24".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_1b40".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("faceshieldkit_4b24".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("measure protect".ToLower(), "measure protect")
+        lst_ProdSys_ProductNames.Add("multichannelremote".ToLower(), "multi-channel remote")
+        lst_ProdSys_ProductNames.Add("pelmet".ToLower(), "pelmet")
+        lst_ProdSys_ProductNames.Add("pole2m".ToLower(), "2m telescopic pole")
+        lst_ProdSys_ProductNames.Add("pole3m".ToLower(), "3m telescopic pole")
+        lst_ProdSys_ProductNames.Add("PRB_Fittings_Recess".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("PRB_Fittings_Surface".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("premiumrollerblind".ToLower(), "premiumrollerblind")
+        lst_ProdSys_ProductNames.Add("premiumskylight".ToLower(), "skylightplus")
+        lst_ProdSys_ProductNames.Add("RB_Brackets_Black".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("RB_Brackets_Grey".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("RB_Brackets_White".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("RB_DF_Brackets_White".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("RB_M_Brackets_Black".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("RB_M_Brackets_White".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("rollerblind".ToLower(), "rollerblind")
+        lst_ProdSys_ProductNames.Add("rollerblinddrillfree".ToLower(), "rollerblind-drillfree")
+        lst_ProdSys_ProductNames.Add("rollerblindextend_black".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("rollerblindextend_blue".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("rollerblindextend_red".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("rollerblindextend_green".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("rollerblindmotorised".ToLower(), "rollerblind-motorised")
+        lst_ProdSys_ProductNames.Add("smarthub".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("smartmotorcharger".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("smartremote".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("smartrepeater".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("singlechannelremote".ToLower(), "single-channel remote")
+        lst_ProdSys_ProductNames.Add("SKY_Brakes_Cream".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("SKY_Brakes_Grey".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("SKY_Brakes_White".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("solarskylight".ToLower(), "skylightplus")
+        lst_ProdSys_ProductNames.Add("SS_Battery_Post_03_19".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("SS_Battery_Pre_03_19".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("twinrollerblind".ToLower(), "rollerblind")                                  ' Twin roller blinds import as two rollerblind lines (with a couple of changes)
+        lst_ProdSys_ProductNames.Add("venetian".ToLower(), "venetian")
+        lst_ProdSys_ProductNames.Add("virtualfabric".ToLower(), "rollerblind-additionalfabric")
+        lst_ProdSys_ProductNames.Add("zebrarollerblind".ToLower(), "zebrarollerblind")
+        lst_ProdSys_ProductNames.Add("ZRB_Fittings_Recess".ToLower(), "COMPONENT")
+        lst_ProdSys_ProductNames.Add("ZRB_Fittings_Surface".ToLower(), "COMPONENT")
 
         ' --- Creating ProdSys manufacturer name / code list ---
-        lst_ProdSys_ManufacturerCodes.Add("velux", "VX")
-        lst_ProdSys_ManufacturerCodes.Add("roto", "RO")
-        lst_ProdSys_ManufacturerCodes.Add("fakro", "FO")
-        lst_ProdSys_ManufacturerCodes.Add("rooflite", "RE")
-        lst_ProdSys_ManufacturerCodes.Add("okpol", "OL")
-        lst_ProdSys_ManufacturerCodes.Add("luctis", "LS")
-        lst_ProdSys_ManufacturerCodes.Add("dakstra", "DA")
+        lst_ProdSys_ManufacturerCodes.Add("velux".ToLower(), "VX")
+        lst_ProdSys_ManufacturerCodes.Add("roto".ToLower(), "RO")
+        lst_ProdSys_ManufacturerCodes.Add("fakro".ToLower(), "FO")
+        lst_ProdSys_ManufacturerCodes.Add("rooflite".ToLower(), "RE")
+        lst_ProdSys_ManufacturerCodes.Add("okpol".ToLower(), "OL")
+        lst_ProdSys_ManufacturerCodes.Add("luctis".ToLower(), "LS")
+        lst_ProdSys_ManufacturerCodes.Add("dakstra".ToLower(), "DA")
 
         ' --- Creating fitting type translation list ---
-        lst_ProdSys_FittingTypes.Add("recessedge", "Edge of Window Recess")         ' BlocOut40 fitting type
-        lst_ProdSys_FittingTypes.Add("recessinside", "Inside the Window Recess")    ' BlocOut40 fitting type
-        lst_ProdSys_FittingTypes.Add("surface3", "Surface three sides")             ' BlocOut40 fitting type
-        lst_ProdSys_FittingTypes.Add("surface4", "Surface four sides")              ' BlocOut40 fitting type
-        lst_ProdSys_FittingTypes.Add("recess", "Recess")                            ' BlocOut80, Premium Roller, Zebra, Rollers fitting type
-        lst_ProdSys_FittingTypes.Add("surface", "Surface")                          ' BlocOut80, Premium Roller, Zebra fitting type
-        lst_ProdSys_FittingTypes.Add("topfix", "Topfix")                            ' Premium Roller, Zebra fitting type
-        lst_ProdSys_FittingTypes.Add("exact", "Exact")                              ' rollerblind / motorised / twin fitting type
+        lst_ProdSys_FittingTypes.Add("recessedge".ToLower(), "Edge of Window Recess")         ' BlocOut40 fitting type
+        lst_ProdSys_FittingTypes.Add("recessinside".ToLower(), "Inside the Window Recess")    ' BlocOut40 fitting type
+        lst_ProdSys_FittingTypes.Add("surface3".ToLower(), "Surface three sides")             ' BlocOut40 fitting type
+        lst_ProdSys_FittingTypes.Add("surface4".ToLower(), "Surface four sides")              ' BlocOut40 fitting type
+        lst_ProdSys_FittingTypes.Add("recess".ToLower(), "Recess")                            ' BlocOut80, Premium Roller, Zebra, Rollers fitting type
+        lst_ProdSys_FittingTypes.Add("surface".ToLower(), "Surface")                          ' BlocOut80, Premium Roller, Zebra fitting type
+        lst_ProdSys_FittingTypes.Add("topfix".ToLower(), "Topfix")                            ' Premium Roller, Zebra fitting type
+        lst_ProdSys_FittingTypes.Add("exact".ToLower(), "Exact")                              ' rollerblind / motorised / twin fitting type
 
     End Sub
 
@@ -3593,3 +3854,5 @@ Module Importer
     End Sub
 
 End Module
+
+
