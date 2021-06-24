@@ -14,6 +14,8 @@ Module Importer
     Dim lst_ProdSys_LineType As Dictionary(Of String, String)               ' Translates Website Product names into ProdSys order line types
     Dim lst_ProdSys_ManufacturerCodes As Dictionary(Of String, String)      ' Translates website manufacturer names into 2 character manufacturer codes used in item codes
     Dim lst_ProdSys_FittingTypes As Dictionary(Of String, String)           ' Translates website product fitting types into ProdSys fitting types
+    Dim lst_SpareParts As List(Of String)                                   ' List of Spare Parts products
+    Dim class_blnIsSparesOrder As Boolean                                   ' Boolean to indicate if an order is a spare-parts only order
 
 
     Public Enum enumWebsites
@@ -41,8 +43,10 @@ Module Importer
         ' --- Defining objects and variables ---
         Dim strOrdHeaderSql As String
         Dim strCurrencyRate As String
+        Dim dateQuotedDelivery As Date
         Dim dateDispatchBy As Date
         Dim intFactoryBufferDays As Integer = 0
+        Dim intWorkingDaysDifference As Integer = 0
         Dim blnOnHold As Boolean = False
         Dim param_OH_Order_no As SqlParameter
         Dim param_OH_Order_date As SqlParameter
@@ -58,20 +62,22 @@ Module Importer
         Dim param_OH_STATUS As SqlParameter
         Dim param_OH_INVOICEACCOUNT As SqlParameter
         Dim param_OH_DISPATCHBYDATE As SqlParameter
+        Dim param_OH_OrderIs24HrDelivery As SqlParameter
         Dim param_OH_CurrencyRate As SqlParameter
         Dim param_OH_SiteLanguage As SqlParameter
         Dim param_OH_Website As SqlParameter
         Dim param_OH_WebsiteOrderID As SqlParameter
         Dim param_OH_OnHold As SqlParameter
+        Dim param_OH_PreferredCourier As SqlParameter
 
 
         ' --- Constructing ORD_HEADER insert statement ---
         strOrdHeaderSql = "INSERT INTO ORD_HEADERS (order_no, order_date, order_priority, order_type, client_name, client_email, " _
                         & "client_tel, client_street, client_town, client_county, client_postcode, STATUS, INVOICEACCOUNT, DISPATCHBYDATE, " _
-                        & "CurrencyRate, SiteLanguage, Website, WebsiteOrderID, ONHOLD) " _
+                        & "OrderIs24HrDelivery, CurrencyRate, SiteLanguage, Website, WebsiteOrderID, ONHOLD, PreferredCourier) " _
                         & "VALUES ( @order_no_OH, @order_date_OH, @order_priority_OH, @order_type_OH, @client_name_OH, @client_email_OH, " _
                         & "@client_tel_OH, @client_street_OH, @client_town_OH, @client_country_OH, @client_postcode_OH, @STATUS_OH, @INVOICEACCOUNT_OH, " _
-                        & "@DISPATCHBYDATE_OH, @CurrencyRate_OH, @SiteLanguage_OH, @Website_OH, @WebsiteOrderID_OH, @OnHold_OH); "
+                        & "@DISPATCHBYDATE_OH, @OrderIs24HrDelivery_OH, @CurrencyRate_OH, @SiteLanguage_OH, @Website_OH, @WebsiteOrderID_OH, @OnHold_OH, @PreferredCourier_OH); "
 
 
         ' --- Pre-calculating some parameter values ---
@@ -80,6 +86,13 @@ Module Importer
             strCurrencyRate = "1"
         End If
         If strWebsite.ToUpper = "TEST" Then blnOnHold = True Else blnOnHold = False
+
+        dateQuotedDelivery = CDate(drOrderHeader("QuotedDeliveryDate"))
+        If drOrderHeader.Table.Columns.Contains("FBDaTOO") Then Integer.TryParse(drOrderHeader("FBDaTOO"), intFactoryBufferDays)    ' Attempting to retrieve factory buffer days at time of order (default 0, as set above)
+        dateDispatchBy = Utilities.SubtractWorkingDays(dateQuotedDelivery, 2 + intFactoryBufferDays)        ' Pre-calculating the dispatch-by date (2 days for DPD delivery, plus however many days were set as a buffer)
+        If dateDispatchBy < Today Then dateDispatchBy = Today                                                                       ' If the dispatch-by date is before today, then cap it at today
+        intWorkingDaysDifference = Utilities.WorkingDaysDifference(dateDispatchBy, dateQuotedDelivery)
+
 
         ' --- Setting parameters ---
         param_OH_Order_no = New SqlParameter("@order_no_OH", "BL" & strWebsite & drOrderHeader("Order_No").ToString)
@@ -95,15 +108,18 @@ Module Importer
         param_OH_Client_postcode = New SqlParameter("@client_postcode_OH", drOrderHeader("Delivery_Postcode"))
         param_OH_STATUS = New SqlParameter("@STATUS_OH", "NEW")
         param_OH_INVOICEACCOUNT = New SqlParameter("@INVOICEACCOUNT_OH", "CAS001")
-        If drOrderHeader.Table.Columns.Contains("FBDaTOO") Then Integer.TryParse(drOrderHeader("FBDaTOO"), intFactoryBufferDays)    ' Attempting to retrieve factory buffer days at time of order (default 0, as set above)
-        dateDispatchBy = Utilities.SubtractWorkingDays(CDate(drOrderHeader("QuotedDeliveryDate")), 2 + intFactoryBufferDays)        ' Pre-calculating the dispatch-by date (2 days for DPD delivery, plus however many days were set as a buffer)
-        If dateDispatchBy < Today Then dateDispatchBy = Today                                                                       ' If the dispatch-by date is before today, then cap it at today
         param_OH_DISPATCHBYDATE = New SqlParameter("@DISPATCHBYDATE_OH", dateDispatchBy)
+        If intWorkingDaysDifference < 2 Then
+            param_OH_OrderIs24HrDelivery = New SqlParameter("@OrderIs24HrDelivery_OH", "YES")
+        Else
+            param_OH_OrderIs24HrDelivery = New SqlParameter("@OrderIs24HrDelivery_OH", DBNull.Value)
+        End If
         param_OH_CurrencyRate = New SqlParameter("@CurrencyRate_OH", strCurrencyRate)
         param_OH_SiteLanguage = New SqlParameter("@SiteLanguage_OH", "eng-uk")
         param_OH_Website = New SqlParameter("@Website_OH", strWebsite)
         param_OH_WebsiteOrderID = New SqlParameter("@WebsiteOrderID_OH", drOrderHeader("Order_No").ToString)
         param_OH_OnHold = New SqlParameter("@OnHold_OH", blnOnHold)
+        param_OH_PreferredCourier = New SqlParameter("@PreferredCourier_OH", DBNull.Value)
         cmd.Parameters.Add(param_OH_Order_no)
         cmd.Parameters.Add(param_OH_Order_date)
         cmd.Parameters.Add(param_OH_Order_priority)
@@ -118,11 +134,13 @@ Module Importer
         cmd.Parameters.Add(param_OH_STATUS)
         cmd.Parameters.Add(param_OH_INVOICEACCOUNT)
         cmd.Parameters.Add(param_OH_DISPATCHBYDATE)
+        cmd.Parameters.Add(param_OH_OrderIs24HrDelivery)
         cmd.Parameters.Add(param_OH_CurrencyRate)
         cmd.Parameters.Add(param_OH_SiteLanguage)
         cmd.Parameters.Add(param_OH_Website)
         cmd.Parameters.Add(param_OH_WebsiteOrderID)
         cmd.Parameters.Add(param_OH_OnHold)
+        cmd.Parameters.Add(param_OH_PreferredCourier)
 
 
         ' --- Writing the insert header SQL into the command ---
@@ -2086,6 +2104,13 @@ Module Importer
         ' --- Looping through each line in the ORD_LINES table ---
         For Each drOrderLine As DataRow In dtOrderLines.Rows
 
+
+            ' --- Checking if product is or isn't a spare part ---
+            If lst_SpareParts.Contains(drOrderLine("ProductName").ToString()) = False Then
+                class_blnIsSparesOrder = False
+            End If
+
+
             ' --- Excluding Fabric Samples from being imported ---
             If drOrderLine("ProductName").ToString().ToLower() = "fabricsample" Then
                 ' Do nothing. This line should not be added to the command
@@ -3348,6 +3373,10 @@ Module Importer
             Else
                 For Each drOrderHeader In dtOrderHeaders.Rows
 
+                    ' --- Setting default information ---
+                    class_blnIsSparesOrder = True       ' True by default. If any product is found in the order that is not in the Spares list, this is set to False
+
+
                     ' --- Creating SQL command ---
                     cmdImportTransaction = New SqlCommand
                     cmdImportTransaction.CommandText = sbTransactionSql.ToString
@@ -3359,6 +3388,27 @@ Module Importer
 
                     ' --- Adding order lines SQL and parameters to command ---
                     Build_OrderLines(cmdImportTransaction, drOrderHeader, strWebsite)
+
+
+                    ' --- Modifying ORD_HEADER parameters based on lines data ---
+                    If class_blnIsSparesOrder = True Then
+                        Dim intOnHoldIndex As Integer = cmdImportTransaction.Parameters.IndexOf("@OnHold_OH")
+                        Dim intPreferredCourierIndex As Integer = cmdImportTransaction.Parameters.IndexOf("@PreferredCourier_OH")
+                        Dim paramOnHold As SqlParameter = Nothing
+                        Dim paramPreferredCourier As SqlParameter = Nothing
+                        If intOnHoldIndex >= 0 And intPreferredCourierIndex >= 0 Then
+                            paramOnHold = cmdImportTransaction.Parameters(intOnHoldIndex)
+                            paramPreferredCourier = cmdImportTransaction.Parameters(intPreferredCourierIndex)
+                        End If
+                        If IsNothing(paramOnHold) Then
+                            Console.WriteLine("Could not retrieve OnHold parameter object")
+                        ElseIf IsNothing(paramPreferredCourier) Then
+                            Console.WriteLine("Could not retrieve OnHold parameter object")
+                        Else
+                            paramOnHold.Value = True
+                            paramPreferredCourier.Value = "POST"
+                        End If
+                    End If
 
 
                     ' --- Executing Insert Transaction ---
@@ -3567,6 +3617,7 @@ Module Importer
         lst_ProdSys_LineType = New Dictionary(Of String, String)               ' Translates Website Product names into ProdSys order line types
         lst_ProdSys_ManufacturerCodes = New Dictionary(Of String, String)      ' Translates website manufacturer names into 2 character manufacturer codes used in item codes
         lst_ProdSys_FittingTypes = New Dictionary(Of String, String)           ' Translates website product fitting types into ProdSys fitting types
+        lst_SpareParts = New List(Of String)                                   ' A list of product names that are Spare Parts
 
 
         ' --- Creating Item Code Prefix translation list ---
@@ -3779,6 +3830,29 @@ Module Importer
         lst_ProdSys_FittingTypes.Add("surface".ToLower(), "Surface")                          ' BlocOut80, Premium Roller, Zebra fitting type
         lst_ProdSys_FittingTypes.Add("topfix".ToLower(), "Topfix")                            ' Premium Roller, Zebra fitting type
         lst_ProdSys_FittingTypes.Add("exact".ToLower(), "Exact")                              ' rollerblind / motorised / twin fitting type
+
+        ' --- Creating Spare Parts product names list ---
+        lst_SpareParts.Add("BO40_Brakes_Grey")
+        lst_SpareParts.Add("BO40_Brakes_White")
+        lst_SpareParts.Add("BO40_Brakes_Cream")
+        lst_SpareParts.Add("SKY_Brakes_Grey")
+        lst_SpareParts.Add("SKY_Brakes_White")
+        lst_SpareParts.Add("SKY_Brakes_Cream")
+        lst_SpareParts.Add("BO40_Fittings")
+        lst_SpareParts.Add("BO80_Fittings_Recess")
+        lst_SpareParts.Add("BO80_Fittings_Surface")
+        lst_SpareParts.Add("RB_Brackets_White")
+        lst_SpareParts.Add("RB_Brackets_Black")
+        lst_SpareParts.Add("RB_Brackets_Grey")
+        lst_SpareParts.Add("RB_DF_Brackets_White")
+        lst_SpareParts.Add("RB_M_Brackets_White")
+        lst_SpareParts.Add("RB_M_Brackets_Black")
+        lst_SpareParts.Add("PRB_Fittings_Recess")
+        lst_SpareParts.Add("PRB_Fittings_Surface")
+        lst_SpareParts.Add("ZRB_Fittings_Recess")
+        lst_SpareParts.Add("ZRB_Fittings_Surface")
+        'lst_SpareParts.Add("SS_Battery_Pre_03_19")
+        'lst_SpareParts.Add("SS_Battery_Post_03_19")
 
     End Sub
 

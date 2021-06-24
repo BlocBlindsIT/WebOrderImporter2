@@ -67,4 +67,43 @@
 
     End Function
 
+
+    Function WorkingDaysDifference(date1 As Date, date2 As Date) As Integer
+
+        ' --- Defining objects and variables ---
+        Dim blnDifferenceIsPositive As Boolean
+        Dim dateTemp As Date
+        Dim intOutput As Integer = 0
+        Dim intSafetyCounter As Integer = 0
+
+
+        ' --- Switching dates, if required ---
+        If date1 > date2 Then
+            dateTemp = date1
+            date1 = date2
+            date2 = dateTemp
+            blnDifferenceIsPositive = False
+        Else
+            blnDifferenceIsPositive = True
+        End If
+        intSafetyCounter = DateDiff(DateInterval.Day, date1, date2)     ' Safety counter to help prevent infinite loops
+
+
+        ' --- Counting loop ---
+        Do While date1 < date2 And intSafetyCounter > 0
+            If date1.DayOfWeek = DayOfWeek.Saturday Or date1.DayOfWeek = DayOfWeek.Sunday Then
+                ' Don't increment counter
+            Else
+                intOutput += 1
+            End If
+            intSafetyCounter -= 1
+        Loop
+
+
+        ' --- Outputting data ---
+        If blnDifferenceIsPositive = False Then intOutput = intOutput * -1
+        Return intOutput
+
+    End Function
+
 End Module
