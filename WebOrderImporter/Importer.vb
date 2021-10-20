@@ -32,21 +32,24 @@ Module Importer
     ''' <param name="cmd">The full SQL transaction command to add an order header insert statement / parameters to</param>
     ''' <param name="drOrderHeader">The ORD_HEADER record from the website to create an insert statement from</param>
     ''' <param name="strWebsite">The location code of the website (e.g. UK)</param>
+    ''' <param name="orderLeadTime">Information about the lead time associated with the order (derived from the order lines)</param>
     ''' <remarks>
     ''' Author: Huw Day - 05/02/2018
     ''' The command is passed in by reference. Any changes will be available to the calling function without
     ''' the command needing to be passed back.
     ''' </remarks>
-    Sub Build_OrderHeader(ByRef cmd As SqlCommand, drOrderHeader As DataRow, strWebsite As String)
+    Sub Build_OrderHeader(ByRef cmd As SqlCommand, drOrderHeader As DataRow, strWebsite As String, orderLeadTime As OrderLeadTime)
 
 
         ' --- Defining objects and variables ---
         Dim strOrdHeaderSql As String
         Dim strCurrencyRate As String
+        Dim dateOfOrder As Date
         Dim dateQuotedDelivery As Date
         Dim dateDispatchBy As Date
         Dim intFactoryBufferDays As Integer = 0
         Dim intWorkingDaysDifference As Integer = 0
+        Dim blnUse24HourDelivery As Boolean = False
         Dim blnOnHold As Boolean = False
         Dim param_OH_Order_no As SqlParameter
         Dim param_OH_Order_date As SqlParameter
@@ -87,11 +90,21 @@ Module Importer
         End If
         If strWebsite.ToUpper = "TEST" Then blnOnHold = True Else blnOnHold = False
 
+        dateOfOrder = CDate(drOrderHeader("DateEntered"))
         dateQuotedDelivery = CDate(drOrderHeader("QuotedDeliveryDate"))
         If drOrderHeader.Table.Columns.Contains("FBDaTOO") Then Integer.TryParse(drOrderHeader("FBDaTOO"), intFactoryBufferDays)    ' Attempting to retrieve factory buffer days at time of order (default 0, as set above)
         dateDispatchBy = Utilities.SubtractWorkingDays(dateQuotedDelivery, 2 + intFactoryBufferDays)        ' Pre-calculating the dispatch-by date (2 days for DPD delivery, plus however many days were set as a buffer)
-        If dateDispatchBy < Today Then dateDispatchBy = Today                                                                       ' If the dispatch-by date is before today, then cap it at today
-        intWorkingDaysDifference = Utilities.WorkingDaysDifference(dateDispatchBy, dateQuotedDelivery)
+
+        If orderLeadTime.LeadTimeDays = 1 Then
+            blnUse24HourDelivery = True
+            If dateOfOrder.TimeOfDay < orderLeadTime.CutoffTime Then
+                dateDispatchBy = Today
+            Else
+                dateDispatchBy = Utilities.AddWorkingDays(Today, 1)
+            End If
+        Else
+            If dateDispatchBy < Today Then dateDispatchBy = Today
+        End If
 
 
         ' --- Setting parameters ---
@@ -109,7 +122,7 @@ Module Importer
         param_OH_STATUS = New SqlParameter("@STATUS_OH", "NEW")
         param_OH_INVOICEACCOUNT = New SqlParameter("@INVOICEACCOUNT_OH", "CAS001")
         param_OH_DISPATCHBYDATE = New SqlParameter("@DISPATCHBYDATE_OH", dateDispatchBy)
-        If intWorkingDaysDifference < 2 Then
+        If blnUse24HourDelivery Then
             param_OH_OrderIs24HrDelivery = New SqlParameter("@OrderIs24HrDelivery_OH", "YES")
         Else
             param_OH_OrderIs24HrDelivery = New SqlParameter("@OrderIs24HrDelivery_OH", DBNull.Value)
@@ -1526,8 +1539,21 @@ Module Importer
             End If
         End If
 
+
         ' -- Operation --
-        If blnIsMotorised = True Then strOperation_value = "MOTORISED" Else strOperation_value = ""
+        If blnIsMotorised = True Then
+            strOperation_value = "MOTORISED"
+        Else
+            strOperation_value = ""
+            If drOrderLine.Table.Columns.Contains("DriveType") Then
+                If IsDBNull(drOrderLine("DriveType")) = False Then
+                    If drOrderLine("DriveType").ToString().ToUpper().Contains("WAND") Then
+                        strOperation_value = drOrderLine("DriveType").ToString().ToUpper()
+                    End If
+                End If
+            End If
+        End If
+
 
         ' -- RuleSet --
         ' check based on already calculated production system values of ProductName and Fitting Type
@@ -2023,7 +2049,7 @@ Module Importer
     ''' The command is passed in by reference. Any changes will be available to the calling function without
     ''' the command needing to be passed back.
     ''' </remarks>
-    Sub Build_OrderLines(ByRef cmd As SqlCommand, drOrderHeader As DataRow, strWebsite As String)
+    Function Build_OrderLines(ByRef cmd As SqlCommand, drOrderHeader As DataRow, strWebsite As String) As OrderLeadTime
 
         ' - Use order header to load table of order lines
         ' - Loop through each order line:
@@ -2042,51 +2068,27 @@ Module Importer
         Dim da As SqlDataAdapter
         Dim blnHasMeasureProtect As Boolean = False
         Dim decMeasureProtectValue As Decimal = 0
+        Dim orderLeadTime As New OrderLeadTime(0, New TimeSpan(23, 59, 59))
 
 
         ' --- Getting Order's lines ---
-        strGetOrderLinesQuery = "SELECT ORD_LINES.LineID, " _
-                              & "ORD_LINES.Order_No, " _
-                              & "ORD_LINES.DateEntered, " _
-                              & "ORD_LINES.ProductName, " _
-                              & "ORD_LINES.Product_ItemCode, " _
-                              & "ORD_LINES.FabricCode, " _
-                              & "ORD_LINES.Quantity, " _
-                              & "ORD_LINES.UnitOfMeasure, " _
-                              & "ORD_LINES.DeliveryDate, " _
-                              & "ORD_LINES.OfferUsed, " _
-                              & "ORD_LINES.Price_BeforeDiscount, " _
-                              & "ORD_LINES.Price_Final, " _
-                              & "ORD_LINES.Price_Final_ExTax, " _
-                              & "ORD_LINES.DeliveryDateType, " _
-                              & "ORD_LINES.AluminiumColour, " _
-                              & "ORD_LINES.BracketColour, " _
-                              & "ORD_LINES.ChainSide, " _
-                              & "ORD_LINES.CustomerReference, " _
-                              & "ORD_LINES.InnerFabricCode, " _
-                              & "ORD_LINES.FittingType, " _
-                              & "ORD_LINES.FrameDepth, " _
-                              & "ORD_LINES.FrameDrop, " _
-                              & "ORD_LINES.FrameWidth, " _
-                              & "ORD_LINES.GlassDrop, " _
-                              & "ORD_LINES.GlassWidth, " _
-                              & "ORD_LINES.Height, " _
-                              & "ORD_LINES.HeightLeft, " _
-                              & "ORD_LINES.HeightRight, " _
-                              & "ORD_LINES.Manufacturer, " _
-                              & "ORD_LINES.MeasureProtect, " _
-                              & "ORD_LINES.Motorised, " _
-                              & "ORD_LINES.RecessDepth, " _
-                              & "ORD_LINES.RollDirection, " _
-                              & "ORD_LINES.Width, " _
-                              & "ORD_LINES.WidthBottom, " _
-                              & "ORD_LINES.WidthMiddle, " _
-                              & "ORD_LINES.WindowCode, " _
-                              & "ORD_LINES.MeasureProtectValue, " _
-                              & "ORD_LINES.Product_ItemCode, " _
-                              & "Ref_ProductNames.ExportAsName " _
+        'strGetOrderLinesQuery = "SELECT ORD_LINES.*, Ref_ProductNames.ExportAsName " _
+        '                      & "FROM ORD_LINES INNER JOIN Ref_ProductNames On ORD_LINES.ProductName = Ref_ProductNames.AppName " _
+        '                      & "WHERE Order_No = @OrderNo;"
+
+        strGetOrderLinesQuery = "SELECT ORD_LINES.*, Ref_ProductNames.ExportAsName, " _
+                              & "(SELECT UKLeadMaxDays FROM Products_LeadTimes As PLT2 WHERE PLT2.ID = IsNull( " _
+                              & "(SELECT ID FROM Products_LeadTimes As PLT1 WHERE PLT1.ProductName = ORD_LINES.ProductName AND PLT1.FabricsList LIKE '%#' + ORD_LINES.FabricCode + ';%'), " _
+                              & "(SELECT ID FROM Products_LeadTimes As PLT1 WHERE PLT1.ProductName = ORD_LINES.ProductName AND PLT1.FabricsList = '#default;') " _
+                              & ")) As LeadTimeDays, " _
+                              & "(SELECT Cutoff_Time FROM Products_LeadTimes As PLT4 WHERE PLT4.ID = IsNull( " _
+                              & "(SELECT ID FROM Products_LeadTimes As PLT3 WHERE PLT3.ProductName = ORD_LINES.ProductName AND PLT3.FabricsList LIKE '%#' + ORD_LINES.FabricCode + ';%'), " _
+                              & "(SELECT ID FROM Products_LeadTimes As PLT3 WHERE PLT3.ProductName = ORD_LINES.ProductName AND PLT3.FabricsList = '#default;') " _
+                              & ")) As Cutoff_Time " _
                               & "FROM ORD_LINES INNER JOIN Ref_ProductNames On ORD_LINES.ProductName = Ref_ProductNames.AppName " _
                               & "WHERE Order_No = @OrderNo;"
+
+
         Using conn As SqlConnection = New SqlConnection(ConfigurationManager.ConnectionStrings(strWebsite).ConnectionString)
             cmdGetOrderLines = New SqlCommand(strGetOrderLinesQuery, conn)
             paramOrderNo = New SqlParameter("@OrderNo", drOrderHeader("Order_No"))
@@ -2103,6 +2105,31 @@ Module Importer
 
         ' --- Looping through each line in the ORD_LINES table ---
         For Each drOrderLine As DataRow In dtOrderLines.Rows
+
+
+            ' --- Processing product lead time data ---
+            If IsDBNull(drOrderLine("LeadTimeDays")) = False Then
+                Dim intTempLeadtimeDays As Integer
+                If Integer.TryParse(drOrderLine("LeadTimeDays"), intTempLeadtimeDays) Then
+                    Dim tsTempCutoffTime As TimeSpan
+                    If IsDBNull(drOrderLine("Cutoff_Time")) = False Then
+                        If TimeSpan.TryParse(drOrderLine("Cutoff_Time").ToString(), tsTempCutoffTime) = False Then
+                            tsTempCutoffTime = New TimeSpan(23, 59, 59)
+                        End If
+                    Else
+                        tsTempCutoffTime = New TimeSpan(23, 59, 59)
+                    End If
+                    If orderLeadTime.LeadTimeDays < intTempLeadtimeDays Then
+                        ' Take the largest cutoff time
+                        orderLeadTime.LeadTimeDays = intTempLeadtimeDays
+                        orderLeadTime.CutoffTime = tsTempCutoffTime
+
+                    ElseIf orderLeadTime.LeadTimeDays = intTempLeadtimeDays And orderLeadTime.CutoffTime > tsTempCutoffTime Then
+                        ' If the lead times are the same, compare the cutoff times and keep the sooner cutoff time
+                        orderLeadTime.CutoffTime = tsTempCutoffTime
+                    End If
+                End If
+            End If
 
 
             ' --- Checking if product is or isn't a spare part ---
@@ -2159,7 +2186,10 @@ Module Importer
         cmd.CommandText = cmd.CommandText.Replace("/*ORD_LINE_BLOCKS*/", "")
 
 
-    End Sub
+        ' --- Returning order lead time info ---
+        Return orderLeadTime
+
+    End Function
 
 
     ''' <summary>
@@ -3318,6 +3348,7 @@ Module Importer
         Dim sbTransactionSql As New StringBuilder
         Dim lstOutput As New List(Of String)
         Dim blnAbort As Boolean = False
+        Dim orderLeadTime As OrderLeadTime
 
 
         ' --- Writing out queries ---
@@ -3382,12 +3413,12 @@ Module Importer
                     cmdImportTransaction.CommandText = sbTransactionSql.ToString
 
 
-                    ' --- Adding order header SQL and parameters to command ---
-                    Build_OrderHeader(cmdImportTransaction, drOrderHeader, strWebsite)
-
-
                     ' --- Adding order lines SQL and parameters to command ---
-                    Build_OrderLines(cmdImportTransaction, drOrderHeader, strWebsite)
+                    orderLeadTime = Build_OrderLines(cmdImportTransaction, drOrderHeader, strWebsite)
+
+
+                    ' --- Adding order header SQL and parameters to command ---
+                    Build_OrderHeader(cmdImportTransaction, drOrderHeader, strWebsite, orderLeadTime)
 
 
                     ' --- Modifying ORD_HEADER parameters based on lines data ---
